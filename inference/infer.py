@@ -1,5 +1,5 @@
 import os
-
+import uuid
 os.environ['LOWRES_RESIZE'] = '384x32'
 os.environ['HIGHRES_BASE'] = '0x32'
 os.environ['VIDEO_RESIZE'] = "0x64"
@@ -145,13 +145,15 @@ if USE_SPEECH and audio_path:
 elif USE_SPEECH and not audio_path:
     # parse audio in the video
     audio = extract_audio(visual)
-    audio.write_audiofile("./video_audio.wav")
-    video_audio_path = './video_audio.wav'
+    unique_id = uuid.uuid4().hex  # generate unique string
+    video_audio_path = f'./video_audio_{unique_id}.wav'
+    audio.write_audiofile(video_audio_path)
     speech, speech_length, speech_chunk, speech_wav = load_audio(video_audio_path)
     speechs.append(speech.bfloat16().to('cuda'))
     speech_lengths.append(speech_length.to('cuda'))
     speech_chunks.append(speech_chunk.to('cuda'))
     speech_wavs.append(speech_wav.to('cuda'))
+    os.remove(video_audio_path)
 else:
     speechs = [torch.zeros(1, 3000, 128).bfloat16().to('cuda')]
     speech_lengths = [torch.LongTensor([3000]).to('cuda')]
